@@ -68,6 +68,7 @@ inline int close(int fd) { return ::closesocket(fd); }
 #include <ctime>
 #include <deque>
 #include <exception>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <locale>
@@ -356,12 +357,16 @@ inline string GetTempDirectory() {
   WCHAR buf[65536];
   int retval = GetTempPath(65536, buf);
   int a = 0;
-  std::wstring_convert<std::codecvt_utf8_utf16<wchar_t> > converter;
+  std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
   std::string tmpDir = converter.to_bytes(wstring(buf, retval));
 #else
   string tmpDir = _PATH_TMP;
 #endif
-  return tmpDir;
+  string etTmpDir = tmpDir + "et";
+  if (!filesystem::is_directory(etTmpDir) || !filesystem::exists(etTmpDir)) {
+    filesystem::create_directory(etTmpDir);
+  }
+  return etTmpDir;
 }
 
 inline void HandleTerminate() {
