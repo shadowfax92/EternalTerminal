@@ -170,6 +170,9 @@ const int MAX_CLIENT_KEEP_ALIVE_DURATION = 5;
 // allow enough time.
 const int SERVER_KEEP_ALIVE_DURATION = 11;
 
+// Delete all files in TmpDir which is older than below number of days
+const int DELETE_FILES_OLDER_THAN_DAYS = 3;
+
 #if defined(__ANDROID__)
 #define STFATAL LOG(FATAL) << "No Stack Trace on Android" << endl
 
@@ -367,6 +370,24 @@ inline string GetTempDirectory() {
     filesystem::create_directory(etTmpDir);
   }
   return etTmpDir;
+}
+
+inline bool isFileOlderThan(const fs::path &path, int days) {
+  auto now = fs::file_time_type::clock::now();
+  return std::chrono::duration_cast<std::chrono::hours>(
+             now - fs::last_write_time(path))
+             .count() > days * 24;
+}
+
+inline void cleanUpOlderTempFiles() {
+  string tmpDir = GetTempDirectory();
+
+  for (const auto &p : fs::recursive_directory_iterator(tmpDir)) {
+    if (p.is_regular_file() &&
+        isFileOlderThan(p.path(), DELETE_FILES_OLDER_THAN_DAYS)) {
+      filesystem::remove(p);
+    }
+  }
 }
 
 inline void HandleTerminate() {

@@ -24,6 +24,7 @@ int main(int argc, char** argv) {
   LogHandler::setupStdoutLogger();
 
   et::HandleTerminate();
+  cleanUpOlderTempFiles();
 
   // Override easylogging handler for sigint
   ::signal(SIGINT, et::InterruptSignalHandler);
